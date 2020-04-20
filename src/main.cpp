@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <arpa/inet.h>
 
+#include "Message.hpp"
+
 const int BUFSIZE = 15;
 const int PORT = 3333;
 
@@ -46,7 +48,7 @@ void read(int description, char *buffer)
 
 void write(int description, std::string data)
 {
-    std::cout << "Send response to server :" << data << std::endl;
+    std::cout << "Send message to server :" << data << std::endl;
     int n = send(description, data.c_str(), data.length(), 0);
     if (n < 0) {
         throw SocketException("ERROR writing to socket");
@@ -77,18 +79,17 @@ int main() {
         throw SocketException("Cannot connect to server");  
     }
 
-     while(true){
-        write(description, "test");
+    Message::Connection connection;
+    write(description, connection.SerializeToString());
+    std::cout << connection.SerializeToString() << std::endl;
+    while(true){
+
         try {
-            read(description, buffer);
-            // Pour plus tard 
-            // Message::Duck duck;
-            // duck.ParseFromString(std::string(buffer));
+            read(description, buffer); 
+            Message::Duck duck;
+            duck.ParseFromString(std::string(buffer));
             
-            // if(duck.IsInitialized()) {
-                // std::cout << duck.DebugString();
-                // break;
-            // }   
+            std::cout << duck.DebugString();   
             
         } catch(SocketException& e) {
             std::cout << e.what() << std::endl;
